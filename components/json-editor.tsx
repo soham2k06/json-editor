@@ -9,10 +9,12 @@ export type JsonEditorProps = {
 };
 
 function JsonEditor(props: JsonEditorProps) {
-  const [editObject, setEditObject] = useState<any>(props.data);
+  const storedData =
+    typeof window !== "undefined" ? localStorage.getItem("jsonData") : null;
+
+  const [editObject, setEditObject] = useState<any>(storedData || props.data);
 
   useEffect(() => {
-    const storedData = localStorage.getItem("jsonData");
     if (storedData) setEditObject(JSON.parse(storedData));
   }, []);
 

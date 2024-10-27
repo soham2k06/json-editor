@@ -1,5 +1,5 @@
 import { ConfigContext } from "@/contexts/config-context";
-import { getTypeString } from "@/lib/utils";
+import { cn, getTypeString } from "@/lib/utils";
 import { DataType } from "@/lib/constants";
 import { SquareMinus } from "lucide-react";
 import {
@@ -20,7 +20,7 @@ function ToolsView(props: {
   return (
     <ConfigContext.Consumer>
       {({ onChangeType, onClickDelete }) => (
-        <div className="absolute right-0 top-0 flex items-center">
+        <div className="flex items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -34,7 +34,7 @@ function ToolsView(props: {
             onValueChange={(value) => onChangeType(value, props.uniqueKey)}
             defaultValue={getTypeString(props.fieldValue)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="max-w-32">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent align="end">

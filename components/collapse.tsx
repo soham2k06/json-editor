@@ -12,7 +12,7 @@ type Props = {
 function CollapsePart(props: Props) {
   const { fieldValue, uniqueKey } = props;
   const { onChangeAllow, allowMap } = useContext(ConfigContext);
-  if (!isObject(fieldValue)) return <span></span>;
+  if (!isObject(fieldValue)) return null;
 
   return (
     <Button

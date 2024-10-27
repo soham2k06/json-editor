@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { getKeyList, getQuoteAddress, getTypeString } from "@/lib/utils";
+import {
+  getKeyList,
+  getQuoteAddress,
+  getTypeString,
+  isObject,
+} from "@/lib/utils";
 import { DataType, typeMap } from "@/lib/constants";
 import { ConfigContext } from "@/contexts/config-context";
 
@@ -15,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
 export type JsonViewProps = {
   setEditObject: any;
@@ -90,7 +103,8 @@ function JsonView(props: JsonViewProps) {
     fieldKey: string,
     sourceData: any,
     deepLevel: number,
-    parentUniqueKey: string
+    parentUniqueKey: string,
+    fullKeyNotation: string
   ) => {
     const thatType = getTypeString(fieldValue);
 
@@ -104,35 +118,37 @@ function JsonView(props: JsonViewProps) {
             deepLevel={deepLevel}
             parentUniqueKey={parentUniqueKey}
             getValue={getValue}
+            fullKeyNotation={fullKeyNotation} // pass it down
           />
         );
       case DataType.OBJECT:
-        return (
-          <span>
-            {renderJsonConfig(fieldValue, deepLevel + 1, parentUniqueKey)}
-          </span>
+        return renderJsonConfig(
+          fieldValue,
+          deepLevel + 1,
+          parentUniqueKey,
+          fullKeyNotation
         );
       case DataType.STRING:
         return (
           <Input
-            addon="Value"
             value={fieldValue}
             placeholder="value"
             onChange={(e) =>
               onChangeValue(e.target.value, fieldKey, sourceData)
             }
+            className="max-w-xs"
           />
         );
       case DataType.NUMBER:
         return (
           <Input
             type="number"
-            addon="Value"
             placeholder={fieldValue}
             value={fieldValue}
             onChange={(e) => {
               onChangeValue(+e.target.value, fieldKey, sourceData);
             }}
+            className="max-w-xs"
           />
         );
       case DataType.BOOLEAN:
@@ -143,7 +159,7 @@ function JsonView(props: JsonViewProps) {
               onChangeValue(val, fieldKey, sourceData);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="max-w-xs">
               <SelectValue placeholder={true} />
             </SelectTrigger>
             <SelectContent>
@@ -154,73 +170,103 @@ function JsonView(props: JsonViewProps) {
         );
     }
   };
+
   const onChangeAllow = (uniqueKey: string) => {
     allowMap[uniqueKey] = !allowMap[uniqueKey];
     setAllowMap({ ...allowMap });
   };
   const defaultLevel = 1;
+
   const renderJsonConfig = (
     sourceData: any,
     deepLevel: number = defaultLevel,
-    parentUniqueKey: string = `${deepLevel}`
+    parentUniqueKey: string = `${deepLevel}`,
+    fullKeyNotation: string = ""
   ) => {
     const keyList = Object.keys(sourceData);
+
     if (!keyList.length) {
       return (
-        <div style={{ marginLeft: "20px" }}>
-          <AddItem
-            uniqueKey={"defaultKay"}
-            deepLevel={deepLevel}
-            sourceData={sourceData}
-          />
-        </div>
+        <AddItem
+          uniqueKey={"defaultKey"}
+          deepLevel={deepLevel}
+          sourceData={sourceData}
+        />
       );
     }
+
     return (
-      <div
-        className="object-content"
-        style={{ marginLeft: defaultLevel === deepLevel ? "0" : "20px" }}
-      >
-        <div style={{ marginTop: "10px" }}>
-          {keyList.map((fieldKey, index) => {
-            const uniqueKey = `${parentUniqueKey}-${index}`;
-            const fieldValue = sourceData[fieldKey];
-            return (
-              <div key={uniqueKey} className="mb-1 flex gap-1">
-                <CollapsePart uniqueKey={uniqueKey} fieldValue={fieldValue} />
-                <div className="relative w-full mb-1">
-                  <span className="json-key">
+      <Table>
+        {keyList.map((fieldKey, index) => {
+          const uniqueKey = `${parentUniqueKey}-${index}`;
+          const fieldValue = sourceData[fieldKey];
+
+          const currentFullKeyNotation = fullKeyNotation
+            ? `${fullKeyNotation}.${fieldKey}`
+            : fieldKey;
+
+          const editableKey = fieldKey;
+
+          return (
+            <>
+              <TableHeader>
+                <TableRow>
+                  {!!isObject(fieldValue) && (
+                    <TableHead className=""></TableHead>
+                  )}
+                  <TableHead>Key</TableHead>
+                  {!allowMap[uniqueKey] && (
+                    <TableHead className="text-center">Value</TableHead>
+                  )}
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow key={uniqueKey} className="relative">
+                  {!!isObject(fieldValue) && (
+                    <TableCell className="align-top">
+                      <CollapsePart
+                        uniqueKey={uniqueKey}
+                        fieldValue={fieldValue}
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell className="align-top space-y-2">
                     <Input
-                      addon="Key"
-                      placeholder={fieldKey}
-                      value={fieldKey}
+                      addon={fullKeyNotation ? fullKeyNotation + "." : ""} // Shows nested paths
+                      className="max-w-xs"
+                      placeholder={editableKey}
+                      value={editableKey}
                       onChange={(event) =>
                         onChangeKey(event, fieldKey, uniqueKey, sourceData)
                       }
                     />
-                  </span>
+                  </TableCell>
                   {!allowMap[uniqueKey] && (
-                    <span className="json-value">
+                    <TableCell className="align-top space-y-2">
                       {getValue(
                         fieldValue,
                         fieldKey,
                         sourceData,
                         deepLevel,
-                        uniqueKey
+                        uniqueKey,
+                        currentFullKeyNotation
                       )}
-                    </span>
+                    </TableCell>
                   )}
-                  <ToolsView
-                    uniqueKey={uniqueKey}
-                    fieldValue={fieldValue}
-                    fieldKey={fieldKey}
-                    sourceData={sourceData}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  <TableCell className="align-top flex justify-center w-full">
+                    <ToolsView
+                      uniqueKey={uniqueKey}
+                      fieldValue={fieldValue}
+                      fieldKey={fieldKey}
+                      sourceData={sourceData}
+                    />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </>
+          );
+        })}
         <div>
           <AddItem
             key={parentUniqueKey}
@@ -229,7 +275,7 @@ function JsonView(props: JsonViewProps) {
             sourceData={sourceData}
           />
         </div>
-      </div>
+      </Table>
     );
   };
 

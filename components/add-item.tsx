@@ -13,6 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 
 const AddItem = (props: {
   uniqueKey: string;
@@ -104,68 +111,86 @@ const AddItem = (props: {
     }
   };
   return (
-    <div className="flex mt-2" key={uniqueKey}>
-      {showIncreaseMap[uniqueKey] ? (
-        <div className="space-y-2 w-full">
-          <div>
-            New {isArray ? "Item" : "Property"} at level {props.deepLevel}
-          </div>
-          {!isArray && (
-            <div>
-              <Input
-                value={templateData[uniqueKey]["key"]}
-                placeholder="key"
-                onChange={(event) => changeInputKey(uniqueKey, event)}
-              ></Input>
-            </div>
-          )}
-          {getTypeTemplate(templateData[uniqueKey]["type"] || DataType.STRING)}
-
-          <Select
-            onValueChange={(value: DataType) =>
-              onChangeTempType(uniqueKey, value)
-            }
-            defaultValue={DataType.STRING}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(DataType).map((item) => (
-                <SelectItem value={item} key={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="space-x-2 mt-2">
-            <Button
-              size="sm"
-              onClick={() => onConfirmIncrease(uniqueKey, sourceData)}
-            >
-              Confirm
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onClickIncrease(uniqueKey, false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
+    <Dialog>
+      <DialogTrigger>
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={() => onClickIncrease(uniqueKey, true)}
           size={props.deepLevel === 1 ? "default" : "sm"}
         >
           <Plus className="size-6 text-primary" /> Add{" "}
           {isArray ? "Item" : "Property"}
         </Button>
-      )}
-    </div>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            New {isArray ? "Item" : "Property"} at level {props.deepLevel}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex mt-2" key={uniqueKey}>
+          {showIncreaseMap[uniqueKey] ? (
+            <div className="space-y-2 w-full">
+              {!isArray && (
+                <div>
+                  <Input
+                    value={templateData[uniqueKey]["key"]}
+                    placeholder="key"
+                    onChange={(event) => changeInputKey(uniqueKey, event)}
+                  ></Input>
+                </div>
+              )}
+              {getTypeTemplate(
+                templateData[uniqueKey]["type"] || DataType.STRING
+              )}
+
+              <Select
+                onValueChange={(value: DataType) =>
+                  onChangeTempType(uniqueKey, value)
+                }
+                defaultValue={DataType.STRING}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(DataType).map((item) => (
+                    <SelectItem value={item} key={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="space-x-2 flex mt-2">
+                <Button
+                  size="sm"
+                  onClick={() => onConfirmIncrease(uniqueKey, sourceData)}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onClickIncrease(uniqueKey, false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => onClickIncrease(uniqueKey, true)}
+              size={props.deepLevel === 1 ? "default" : "sm"}
+            >
+              <Plus className="size-6 text-primary" /> Add{" "}
+              {isArray ? "Item" : "Property"}
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 export default AddItem;

@@ -12,7 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative w-full flex rounded-md border-input">
         {addon && (
-          <div className="rounded-l-md border bg-muted flex items-center px-3 pointer-events-none">
+          <div className="rounded-l-md border bg-muted text-[0.675rem] flex items-center px-2 pointer-events-none">
             {addon}
           </div>
         )}
