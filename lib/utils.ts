@@ -120,46 +120,56 @@ export function flattenData(obj: any, prefix = "") {
   return result;
 }
 
-export function unflattenData(data: Record<string, any>) {
-  const result: any[] = [];
-  const temp: Record<string, any> = {};
+type NestedObject = { [key: string]: any };
 
-  for (const key in data) {
+export function unflattenData(data: NestedObject): any {
+  const result: any[] = [];
+  const objectResult: NestedObject = {};
+
+  for (const [key, value] of Object.entries(data)) {
     const keys = key.split(".");
-    let current = temp;
+    let current: NestedObject = objectResult;
+    let isRootArray = false;
 
     for (let i = 0; i < keys.length; i++) {
       const part = keys[i];
+      const match = part.match(/^(\d+|[a-zA-Z_]\w*)(\[(\d+)\])?$/);
+
+      if (!match) {
+        throw new Error(`Invalid key format: ${part}`);
+      }
+
+      const [, objKey, , arrayIndex] = match;
+
+      if (i === 0 && /^\d+$/.test(objKey)) {
+        isRootArray = true;
+        if (!result[parseInt(objKey)]) {
+          result[parseInt(objKey)] = {};
+        }
+        current = result[parseInt(objKey)];
+        continue;
+      }
 
       if (i === keys.length - 1) {
-        // If the key ends with ']', count it as an array index
-        const arrayMatch = part.match(/(.*)\[(\d+)\]/);
-        if (arrayMatch) {
-          const arrayKey = arrayMatch[1];
-          const index = arrayMatch[2];
-
-          // Create the array if it doesn't exist
-          if (!current[arrayKey]) current[arrayKey] = [];
-
-          // Ensure whether the specific index is an object or
-          if (!current[arrayKey][index]) current[arrayKey][index] = {};
-
-          // Setting the value
-          current[arrayKey][index][part.replace(/.*\./, "")] = data[key];
+        if (arrayIndex !== undefined) {
+          current[objKey] = current[objKey] || [];
+          current[objKey][parseInt(arrayIndex)] = value;
         } else {
-          // For regular keys
-          current[part] = data[key];
+          current[objKey] = value;
         }
       } else {
-        // Create the nested structure if it doesn't exist
-        if (!current[part]) current[part] = {};
-
-        current = current[part];
+        if (arrayIndex !== undefined) {
+          current[objKey] = current[objKey] || [];
+          current[objKey][parseInt(arrayIndex)] =
+            current[objKey][parseInt(arrayIndex)] || {};
+          current = current[objKey][parseInt(arrayIndex)];
+        } else {
+          current[objKey] = current[objKey] || {};
+          current = current[objKey];
+        }
       }
     }
   }
 
-  for (const item of Object.values(temp)) result.push(item);
-
-  return result;
+  return result.length > 0 ? result.filter(Boolean) : objectResult;
 }
