@@ -14,8 +14,6 @@ export default function HomePage() {
 
   const [jsonData, setJsonData] = useState(storedData || initialData);
 
-  const [showJson, setShowJson] = useState(false);
-
   useEffect(() => {
     localStorage.setItem("jsonData", JSON.stringify(jsonData));
   }, [jsonData]);
